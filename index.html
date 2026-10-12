@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Long Term Planner</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f5f7f4;--paper:#fff;--ink:#202720;--muted:#748074;--line:#e4e9e2;--green:#718568;--green2:#eaf0e6;--yellow:#ebeb71;--blue:#81c2e3;--red:#b94e4e;--shadow:0 8px 28px #2633210b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,textarea,select{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;font-weight:650;background:var(--green);color:white}button.secondary{background:#eef1eb;color:#30392f}button.ghost{background:transparent;color:var(--muted);padding:7px}button.danger{background:#fff0ef;color:var(--red)}button:disabled{opacity:.45;cursor:not-allowed}
+input,textarea,select{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);outline:none}input:focus,textarea:focus,select:focus{border-color:var(--green)}textarea{resize:vertical;min-height:76px}
+.app{max-width:1240px;margin:auto;padding:28px 22px 60px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:24px}.brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:14px;background:var(--green);display:grid;place-items:center;color:#fff;font-size:21px}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:var(--green);font-weight:800}.top h1{font-size:24px;line-height:1.2;margin:2px 0}.sub{color:var(--muted);font-size:13px}.top-actions{display:flex;gap:8px;align-items:center}
+.setup,.auth{max-width:560px;margin:50px auto;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:26px;box-shadow:var(--shadow)}.setup h2,.auth h2{margin:0 0 8px}.setup p,.auth p{color:var(--muted)}.field{margin:14px 0}.field label{display:block;font-size:12px;font-weight:750;margin-bottom:6px}.note{background:#f6f8f4;border-radius:12px;padding:12px;font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}.stat{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:var(--shadow)}.stat .label{font-size:12px;color:var(--muted);font-weight:650}.stat .value{font-size:25px;font-weight:800;letter-spacing:-.04em;margin:5px 0}.stat .foot{font-size:12px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:285px minmax(0,1fr);gap:18px;align-items:start}.panel{background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}.panel-head{padding:17px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}.panel-head h2{font-size:15px;margin:0}.month-list{padding:8px}.month-item{padding:12px;border-radius:12px;display:flex;gap:10px;align-items:center;cursor:pointer;margin-bottom:3px}.month-item:hover{background:#f6f8f4}.month-item.active{background:var(--green2)}.month-num{width:34px;height:34px;border-radius:10px;background:#f0f2ed;display:grid;place-items:center;font-size:11px;font-weight:800;flex-shrink:0}.month-item.active .month-num{background:var(--green);color:white}.month-info{min-width:0;flex:1}.month-name{font-weight:750;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.month-mini{font-size:11px;color:var(--muted)}.dot{width:7px;height:7px;background:var(--blue);border-radius:50%}
+.detail{min-width:0}.month-title{padding:20px 22px 17px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line)}.month-title h2{font-size:22px;letter-spacing:-.035em;margin:3px 0 5px}.month-title p{margin:0;color:var(--muted);font-size:13px}.month-actions{display:flex;gap:7px;flex-wrap:wrap}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px 22px}.metric{border:1px solid var(--line);border-radius:14px;padding:15px}.metric-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}.metric-title{font-size:13px;font-weight:800}.metric-icon{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--green2)}.metric-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}.metric input{font-weight:700}.progress{height:6px;border-radius:8px;background:#edf0ea;margin-top:12px;overflow:hidden}.progress span{display:block;height:100%;background:var(--green);border-radius:8px;transition:width .2s}.progress-caption{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px}
+.section{padding:0 22px 20px}.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:5px 0 12px}.section-head h3{font-size:14px;margin:0}.section-head p{font-size:12px;color:var(--muted);margin:3px 0 0}.milestones{display:grid;gap:8px}.milestone{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px}.check{width:19px;height:19px;flex-shrink:0;margin-top:2px;accent-color:var(--green)}.mile-body{flex:1;min-width:0}.mile-title{font-weight:700;font-size:13px;overflow-wrap:anywhere}.mile-title.done{text-decoration:line-through;color:#8a9488}.mile-note{font-size:12px;color:var(--muted);margin-top:3px;white-space:pre-wrap}.mile-actions{display:flex;gap:2px;flex-shrink:0}.mile-actions button{font-size:12px;padding:5px 7px}.empty{padding:26px 14px;text-align:center;border:1px dashed #d8dfd4;border-radius:12px;color:var(--muted);font-size:13px}.review{padding:0 22px 22px}.review-box{background:#fafbf8;border:1px solid var(--line);border-radius:14px;padding:14px}.review-box label{font-size:12px;font-weight:750;display:block;margin-bottom:7px}.save-status{font-size:12px;color:var(--muted)}.modal-backdrop{position:fixed;inset:0;background:#1b251b66;display:none;align-items:center;justify-content:center;padding:18px;z-index:10}.modal-backdrop.open{display:flex}.modal{width:min(520px,100%);background:white;border-radius:18px;padding:22px;box-shadow:0 20px 60px #0002}.modal h3{margin:0 0 5px}.modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#263326;color:#fff;padding:11px 16px;border-radius:12px;box-shadow:var(--shadow);z-index:20;font-size:13px;max-width:90vw}.hidden{display:none!important}.error{color:var(--red);font-size:12px;margin-top:8px}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.layout{grid-template-columns:1fr}.month-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.month-item{margin:0}.top{align-items:flex-start}.top-actions{flex-direction:column;align-items:stretch}}
+@media(max-width:520px){.app{padding:18px 12px 40px}.top{flex-direction:column}.top-actions{flex-direction:row;width:100%}.top-actions button{flex:1}.grid{gap:8px}.stat{padding:12px}.stat .value{font-size:20px}.month-list{grid-template-columns:1fr 1fr}.month-title{flex-direction:column;padding:17px}.metrics{grid-template-columns:1fr;padding:14px}.section{padding:0 14px 18px}.review{padding:0 14px 16px}.month-title h2{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><div class="logo">↗</div><div><div class="eyebrow">Build your future, one month at a time</div><h1>Long Term Planner</h1><div class="sub">Rencana yang fleksibel. Realisasi yang tercatat.</div></div></div>
+    <div class="top-actions"><span id="saveStatus" class="save-status">Belum terhubung</span><button id="settingsBtn" class="secondary">Pengaturan</button><button id="signOutBtn" class="secondary hidden">Keluar</button></div>
+  </header>
+  <section id="setupScreen" class="setup hidden">
+    <div class="eyebrow">Setup pertama kali</div><h2>Hubungkan ke Supabase</h2>
+    <p>Masukkan URL project dan anon/publishable key Supabase Anda. Keduanya disimpan di browser ini.</p>
+    <div class="field"><label>Supabase Project URL</label><input id="sbUrl" placeholder="https://xxxx.supabase.co"></div>
+    <div class="field"><label>Publishable / anon key</label><input id="sbKey" placeholder="sb_publishable_... atau eyJ..."></div>
+    <div class="note">Jangan masukkan <b>service_role key</b> di sini. Jalankan file <code>schema.sql</code> di Supabase SQL Editor terlebih dahulu.</div>
+    <div style="display:flex;gap:8px;margin-top:16px"><button id="connectBtn">Simpan & Hubungkan</button><button id="demoBtn" class="secondary">Coba mode demo</button></div><div id="setupError" class="error"></div>
+  </section>
+  <section id="authScreen" class="auth hidden">
+    <div class="eyebrow">Akun pribadi</div><h2 id="authTitle">Masuk ke planner</h2><p>Data rencana disimpan per akun dan tidak dibagikan ke pengguna lain.</p>
+    <div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="email@contoh.com"></div>
+    <div class="field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter"></div>
+    <button id="authSubmit" style="width:100%">Masuk</button><button id="toggleAuth" class="ghost" style="width:100%;margin-top:7px">Belum punya akun? Daftar</button><div id="authError" class="error"></div>
+  </section>
+  <main id="mainApp" class="hidden">
+    <div class="grid">
+      <div class="stat"><div class="label">Total bulan direncanakan</div><div id="statMonths" class="value">0</div><div class="foot">Roadmap jangka panjang</div></div>
+      <div class="stat"><div class="label">Target video total</div><div id="statVideoTarget" class="value">0</div><div class="foot">Jumlah video di semua bulan</div></div>
+      <div class="stat"><div class="label">Realisasi video</div><div id="statVideoActual" class="value">0</div><div class="foot">Akumulasi video yang dibuat</div></div>
+      <div class="stat"><div class="label">Target pendapatan total</div><div id="statMoneyTarget" class="value">Rp0</div><div class="foot">Target lintas bulan</div></div>
+    </div>
+    <div class="layout">
+      <aside class="panel">
+        <div class="panel-head"><h2>Roadmap bulanan</h2><button id="addMonthBtn" style="padding:8px 10px">+ Bulan</button></div>
+        <div id="monthList" class="month-list"></div>
+      </aside>
+      <section id="detailPanel" class="panel detail"></section>
+    </div>
+  </main>
+</div>
+<div id="monthModal" class="modal-backdrop"><div class="modal"><h3 id="monthModalTitle">Tambah bulan</h3><p class="sub">Bulan dapat ditambahkan, diubah, dan diurutkan sesuai rencana terbaru.</p>
+  <div class="field"><label>Nama bulan / fokus</label><input id="monthName" placeholder="Contoh: Validasi penawaran"></div>
+  <div class="field"><label>Tanggal bulan</label><input id="monthDate" type="month"></div>
+  <div class="field"><label>Catatan rencana</label><textarea id="monthPlan" placeholder="Fokus utama bulan ini..."></textarea></div>
+  <div class="actions"><button id="cancelMonth" class="secondary">Batal</button><button id="saveMonth">Simpan bulan</button></div>
+</div></div>
+<div id="mileModal" class="modal-backdrop"><div class="modal"><h3 id="mileModalTitle">Tambah milestone</h3><p class="sub">Pecah target bulanan menjadi langkah yang bisa ditindaklanjuti.</p>
+  <div class="field"><label>Milestone / tugas</label><input id="mileTitle" placeholder="Contoh: Upload 8 video YouTube"></div>
+  <div class="field"><label>Catatan (opsional)</label><textarea id="mileNote" placeholder="Definisi selesai, detail, atau hasil yang diharapkan"></textarea></div>
+  <div class="field"><label>Pindahkan ke bulan</label><select id="mileMonth"></select></div>
+  <div class="actions"><button id="cancelMile" class="secondary">Batal</button><button id="saveMile">Simpan milestone</button></div>
+</div></div>
+<div id="settingsModal" class="modal-backdrop"><div class="modal"><h3>Pengaturan</h3><p class="sub">Kelola koneksi database atau data demo.</p>
+  <div class="field"><label>Supabase Project URL</label><input id="settingsUrl" placeholder="https://nuzigytcmwqwjzufosxo.supabase.co"></div>
+  <div class="field"><label>Publishable / anon key</label><input id="settingsKey" placeholder="sb_publishable_QCQN5gFX7HnDBSPWe1TsRQ_4GJmzVrJ"></div>
+  <div class="note">Mengganti koneksi akan memuat data dari project Supabase yang baru. Data demo hanya ada di browser.</div>
+  <div class="actions"><button id="resetSettings" class="danger">Putuskan koneksi</button><button id="cancelSettings" class="secondary">Batal</button><button id="saveSettings">Simpan koneksi</button></div><div id="settingsError" class="error"></div>
+</div></div>
+<div id="toast" class="toast hidden"></div>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+let supabase = null, user = null, demo = false, authMode = 'login';
+let months = [], milestones = [], selectedMonth = null, editMonthId = null, editMileId = null, saveTimer = null;
+const fmtMoney = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n||0));
+const monthLabel = (date, name) => { if(!date) return name||'Bulan tanpa tanggal'; const d=new Date(date+'-02T00:00:00'); return d.toLocaleDateString('id-ID',{month:'long',year:'numeric'}); };
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(16).slice(2));
+const toast = msg => { $('toast').textContent=msg; $('toast').classList.remove('hidden'); setTimeout(()=>$('toast').classList.add('hidden'),2600); };
+const status = msg => $('saveStatus').textContent=msg;
+function show(id){['setupScreen','authScreen','mainApp'].forEach(x=>$(x).classList.toggle('hidden',x!==id));}
+function modal(id, open){$(''+id).classList.toggle('open',open);}
+function localDemoLoad(){try{months=JSON.parse(localStorage.getItem('ltp_months')||'[]');milestones=JSON.parse(localStorage.getItem('ltp_milestones')||'[]')}catch{months=[];milestones=[]}
+if(!months.length){const start=new Date(); start.setDate(1); for(let i=0;i<12;i++){let d=new Date(start.getFullYear(),start.getMonth()+i,1);months.push({id:uuid(),month_date:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),name:['Bangun konsistensi konten','Validasi format video','Tumbuhkan audiens','Evaluasi monetisasi'][i%4],plan:'Fokus utama bulan ini...',target_videos:8,actual_videos:0,target_income:0,actual_income:0,review:''})} persistDemo();}
+}
+function persistDemo(){localStorage.setItem('ltp_months',JSON.stringify(months));localStorage.setItem('ltp_milestones',JSON.stringify(milestones));status('Tersimpan di browser');}
+async function dbLoad(){
+ const {data:m,error:me}=await supabase.from('planner_months').select('*').order('month_date',{ascending:true});
+ if(me) throw me; const {data:ms,error:mse}=await supabase.from('planner_milestones').select('*').order('sort_order',{ascending:true});
+ if(mse) throw mse; months=m||[];milestones=ms||[];
+}
+async function loadApp(){
+ try{if(demo){localDemoLoad();}else{await dbLoad();} if(!months.length){selectedMonth=null;}else if(!months.some(m=>m.id===selectedMonth))selectedMonth=months[0].id;
+ $('signOutBtn').classList.toggle('hidden',demo||!user);show('mainApp');render();status(demo?'Mode demo · browser': 'Tersimpan di Supabase');}
+ catch(e){show('setupScreen');$('setupError').textContent='Gagal memuat data: '+(e.message||e);}}
+async function saveMonthData(m){if(demo){persistDemo();return;}
+ const payload={user_id:user.id,month_date:m.month_date,name:m.name,plan:m.plan,target_videos:Number(m.target_videos||0),actual_videos:Number(m.actual_videos||0),target_income:Number(m.target_income||0),actual_income:Number(m.actual_income||0),review:m.review||''};
+ const {error}=await supabase.from('planner_months').upsert({...payload,id:m.id},{onConflict:'id'});if(error){status('Gagal menyimpan');toast(error.message);throw error;}status('Tersimpan · '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}));}
+async function saveMilestoneData(ms){if(demo){persistDemo();return;}
+ const payload={id:ms.id,user_id:user.id,month_id:ms.month_id,title:ms.title,note:ms.note||'',is_done:!!ms.is_done,sort_order:Number(ms.sort_order||0)};
+ const {error}=await supabase.from('planner_milestones').upsert(payload,{onConflict:'id'});if(error){toast(error.message);throw error;}}
+async function deleteRow(table,id){if(demo){persistDemo();return;}const {error}=await supabase.from(table).delete().eq('id',id);if(error)throw error;}
+function scheduleSave(m){status('Menyimpan…');clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveMonthData(m).catch(()=>{}),500);}
+function currentMonth(){return months.find(m=>m.id===selectedMonth);}
+function renderStats(){
+ $('statMonths').textContent=months.length;
+ $('statVideoTarget').textContent=months.reduce((s,m)=>s+Number(m.target_videos||0),0).toLocaleString('id-ID');
+ $('statVideoActual').textContent=months.reduce((s,m)=>s+Number(m.actual_videos||0),0).toLocaleString('id-ID');
+ $('statMoneyTarget').textContent=fmtMoney(months.reduce((s,m)=>s+Number(m.target_income||0),0));
+}
+function renderList(){
+ const list=$('monthList');list.innerHTML='';
+ if(!months.length){list.innerHTML='<div class="empty">Belum ada bulan. Tambahkan roadmap pertama Anda.</div>';return;}
+ [...months].sort((a,b)=>(a.month_date||'').localeCompare(b.month_date||'')).forEach((m,i)=>{
+ const el=document.createElement('div');el.className='month-item'+(m.id===selectedMonth?' active':'');
+ const count=milestones.filter(x=>x.month_id===m.id);const done=count.filter(x=>x.is_done).length;
+ el.innerHTML=`<div class="month-num">${String(i+1).padStart(2,'0')}</div><div class="month-info"><div class="month-name"></div><div class="month-mini">${count.length?done+'/'+count.length+' milestone selesai':'Belum ada milestone'}</div></div><span class="dot" title="Bulan dalam roadmap"></span>`;
+ el.querySelector('.month-name').textContent=m.name||monthLabel(m.month_date,'Bulan baru');el.onclick=()=>{selectedMonth=m.id;render();};list.appendChild(el);
+ });
+}
+function renderDetail(){
+ const panel=$('detailPanel'),m=currentMonth();
+ if(!m){panel.innerHTML='<div class="empty" style="margin:20px">Pilih atau tambahkan bulan untuk mulai merencanakan.</div>';return;}
+ const mile=milestones.filter(x=>x.month_id===m.id).sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0));
+ const vp=Math.min(100,Math.round(Number(m.actual_videos||0)/Math.max(1,Number(m.target_videos||0))*100));
+ const mp=Math.min(100,Math.round(Number(m.actual_income||0)/Math.max(1,Number(m.target_income||0))*100));
+ panel.innerHTML=`
+ <div class="month-title"><div><div class="eyebrow">${escapeHtml(monthLabel(m.month_date,m.name))}</div><h2 id="detailName"></h2><p id="detailPlan"></p></div><div class="month-actions"><button id="editMonthBtn" class="secondary">Edit bulan</button><button id="deleteMonthBtn" class="danger">Hapus</button></div></div>
+ <div class="metrics">
+ <div class="metric"><div class="metric-top"><div class="metric-title">🎬 Video</div><div class="metric-icon">↗</div></div><div class="metric-row"><div><label>Target video</label><input type="number" min="0" id="targetVideos" value="${Number(m.target_videos||0)}"></div><div><label>Realisasi video</label><input type="number" min="0" id="actualVideos" value="${Number(m.actual_videos||0)}"></div></div><div class="progress"><span style="width:${vp}%"></span></div><div class="progress-caption"><span>${Number(m.actual_videos||0)} dari ${Number(m.target_videos||0)} video</span><b>${vp}%</b></div></div>
+ <div class="metric"><div class="metric-top"><div class="metric-title">💰 Pendapatan</div><div class="metric-icon">Rp</div></div><div class="metric-row"><div><label>Target (Rp)</label><input type="number" min="0" id="targetIncome" value="${Number(m.target_income||0)}"></div><div><label>Realisasi (Rp)</label><input type="number" min="0" id="actualIncome" value="${Number(m.actual_income||0)}"></div></div><div class="progress"><span style="width:${mp}%;background:var(--blue)"></span></div><div class="progress-caption"><span>${fmtMoney(m.actual_income)} dari ${fmtMoney(m.target_income)}</span><b>${mp}%</b></div></div>
+ </div>
+ <div class="section"><div class="section-head"><div><h3>Milestone & tugas besar</h3><p>Tambah, edit, selesaikan, atau pindahkan ke bulan lain.</p></div><button id="addMileBtn">+ Milestone</button></div><div class="milestones" id="milestoneList"></div></div>
+ <div class="review"><div class="review-box"><label for="monthReview">Evaluasi akhir bulan</label><textarea id="monthReview" placeholder="Apa yang berhasil? Apa yang meleset? Apa yang perlu diubah bulan depan?">${escapeHtml(m.review||'')}</textarea><div class="sub" style="margin-top:6px">Catatan tersimpan otomatis.</div></div></div>`;
+ $('detailName').textContent=m.name||'Bulan tanpa judul';$('detailPlan').textContent=m.plan||'Belum ada catatan rencana.';
+ ['targetVideos','actualVideos','targetIncome','actualIncome'].forEach(id=>$(id).addEventListener('change',()=>{
+   const map={targetVideos:'target_videos',actualVideos:'actual_videos',targetIncome:'target_income',actualIncome:'actual_income'};
+   m[map[id]]=Math.max(0,Number($(id).value||0));scheduleSave(m);renderStats();renderDetail();renderList();
+ }));
+ $('monthReview').addEventListener('input',()=>{m.review=$('monthReview').value;scheduleSave(m);});
+ $('editMonthBtn').onclick=()=>openMonthModal(m);$('deleteMonthBtn').onclick=()=>removeMonth(m);
+ $('addMileBtn').onclick=()=>openMileModal();
+ const ml=$('milestoneList');
+ if(!mile.length){ml.innerHTML='<div class="empty">Belum ada milestone. Tambahkan satu langkah penting untuk bulan ini.</div>';}
+ mile.forEach(ms=>{
+ const el=document.createElement('div');el.className='milestone';
+ el.innerHTML=`<input class="check" type="checkbox" ${ms.is_done?'checked':''} aria-label="Tandai selesai"><div class="mile-body"><div class="mile-title ${ms.is_done?'done':''}"></div><div class="mile-note"></div></div><div class="mile-actions"><button class="secondary edit" title="Edit">Edit</button><button class="danger del" title="Hapus">×</button></div>`;
+ el.querySelector('.mile-title').textContent=ms.title;el.querySelector('.mile-note').textContent=ms.note||'';
+ el.querySelector('.check').onchange=async ev=>{ms.is_done=ev.target.checked;try{await saveMilestoneData(ms);renderList();renderDetail();}catch{}};
+ el.querySelector('.edit').onclick=()=>openMileModal(ms);
+ el.querySelector('.del').onclick=async()=>{if(!confirm('Hapus milestone ini?'))return;try{await deleteRow('planner_milestones',ms.id);milestones=milestones.filter(x=>x.id!==ms.id);if(demo)persistDemo();render();toast('Milestone dihapus');}catch(e){toast(e.message||'Gagal menghapus');}};
+ ml.appendChild(el);
+ });
+}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function render(){renderStats();renderList();renderDetail();}
+function openMonthModal(m=null){editMonthId=m?.id||null;$('monthModalTitle').textContent=m?'Edit bulan':'Tambah bulan';$('monthName').value=m?.name||'';$('monthDate').value=m?.month_date||new Date().toISOString().slice(0,7);$('monthPlan').value=m?.plan||'';modal('monthModal',true);}
+async function saveMonthForm(){
+ const name=$('monthName').value.trim(),date=$('monthDate').value;if(!date){toast('Pilih tanggal bulan.');return;}
+ let m=editMonthId?months.find(x=>x.id===editMonthId):null;
+ if(!m){m={id:uuid(),month_date:date,name,plan:$('monthPlan').value,target_videos:0,actual_videos:0,target_income:0,actual_income:0,review:''};months.push(m);}
+ else{m.month_date=date;m.name=name;m.plan=$('monthPlan').value;}
+ try{await saveMonthData(m);months.sort((a,b)=>(a.month_date||'').localeCompare(b.month_date||''));selectedMonth=m.id;modal('monthModal',false);render();toast('Bulan tersimpan');}catch{}
+}
+async function removeMonth(m){
+ if(!confirm(`Hapus "${m.name||monthLabel(m.month_date,'bulan ini')}" beserta semua milestone di dalamnya?`))return;
+ try{const child=milestones.filter(x=>x.month_id===m.id);for(const x of child)await deleteRow('planner_milestones',x.id);await deleteRow('planner_months',m.id);months=months.filter(x=>x.id!==m.id);milestones=milestones.filter(x=>x.month_id!==m.id);if(demo)persistDemo();selectedMonth=months[0]?.id||null;render();toast('Bulan dihapus');}catch(e){toast(e.message||'Gagal menghapus bulan');}
+}
+function openMileModal(ms=null){editMileId=ms?.id||null;$('mileModalTitle').textContent=ms?'Edit milestone':'Tambah milestone';$('mileTitle').value=ms?.title||'';$('mileNote').value=ms?.note||'';
+ $('mileMonth').innerHTML='';months.forEach(m=>{const o=document.createElement('option');o.value=m.id;o.textContent=monthLabel(m.month_date,m.name);$('mileMonth').appendChild(o);});$('mileMonth').value=ms?.month_id||selectedMonth;modal('mileModal',true);}
+async function saveMileForm(){
+ const title=$('mileTitle').value.trim(),monthId=$('mileMonth').value;if(!title){toast('Tulis nama milestone.');return;}if(!monthId){toast('Buat bulan terlebih dahulu.');return;}
+ let ms=editMileId?milestones.find(x=>x.id===editMileId):null;
+ if(!ms){ms={id:uuid(),month_id:monthId,title,note:$('mileNote').value,is_done:false,sort_order:milestones.filter(x=>x.month_id===monthId).length};milestones.push(ms);}
+ else{ms.month_id=monthId;ms.title=title;ms.note=$('mileNote').value;}
+ try{await saveMilestoneData(ms);selectedMonth=monthId;modal('mileModal',false);if(demo)persistDemo();render();toast('Milestone tersimpan');}catch{}
+}
+async function connect(url,key){
+ url=url.trim().replace(/\/$/,'');key=key.trim();if(!url||!key){$('setupError').textContent='URL dan key wajib diisi.';return;}
+ localStorage.setItem('ltp_sb_url',url);localStorage.setItem('ltp_sb_key',key);demo=false;
+ try{supabase=window.supabase.createClient(url,key);const {data,error}=await supabase.auth.getSession();if(error)throw error;user=data.session?.user||null;
+ if(user){await loadApp();}else{show('authScreen');$('authError').textContent='';}}
+ catch(e){$('setupError').textContent='Koneksi gagal: '+(e.message||e);show('setupScreen');}
+}
+$('connectBtn').onclick=()=>connect($('sbUrl').value,$('sbKey').value);
+$('demoBtn').onclick=()=>{demo=true;user=null;localDemoLoad();selectedMonth=months[0]?.id||null;loadApp();};
+$('addMonthBtn').onclick=()=>openMonthModal();$('saveMonth').onclick=saveMonthForm;$('cancelMonth').onclick=()=>modal('monthModal',false);
+$('saveMile').onclick=saveMileForm;$('cancelMile').onclick=()=>modal('mileModal',false);
+$('settingsBtn').onclick=()=>{$('settingsUrl').value=localStorage.getItem('ltp_sb_url')||'';$('settingsKey').value=localStorage.getItem('ltp_sb_key')||'';modal('settingsModal',true);};
+$('cancelSettings').onclick=()=>modal('settingsModal',false);
+$('saveSettings').onclick=()=>{modal('settingsModal',false);connect($('settingsUrl').value,$('settingsKey').value);};
+$('resetSettings').onclick=()=>{localStorage.removeItem('ltp_sb_url');localStorage.removeItem('ltp_sb_key');supabase=null;user=null;demo=false;modal('settingsModal',false);show('setupScreen');};
+$('toggleAuth').onclick=()=>{authMode=authMode==='login'?'signup':'login';$('authTitle').textContent=authMode==='login'?'Masuk ke planner':'Buat akun planner';$('authSubmit').textContent=authMode==='login'?'Masuk':'Daftar';$('toggleAuth').textContent=authMode==='login'?'Belum punya akun? Daftar':'Sudah punya akun? Masuk';$('authError').textContent='';};
+$('authSubmit').onclick=async()=>{
+ const email=$('authEmail').value.trim(),password=$('authPassword').value;if(!email||!password){$('authError').textContent='Isi email dan password.';return;}
+ $('authError').textContent='Memproses…';
+ try{let res=authMode==='login'?await supabase.auth.signInWithPassword({email,password}):await supabase.auth.signUp({email,password});
+ if(res.error)throw res.error;
+ if(authMode==='signup'&&!res.data.session){$('authError').textContent='Akun dibuat. Cek email untuk konfirmasi, lalu masuk.';return;}
+ user=res.data.user;await loadApp();}
+ catch(e){$('authError').textContent=e.message||'Autentikasi gagal.';}
+};
+$('signOutBtn').onclick=async()=>{await supabase.auth.signOut();user=null;show('authScreen');};
+async function init(){
+ const url=localStorage.getItem('ltp_sb_url'),key=localStorage.getItem('ltp_sb_key');
+ if(url&&key){$('sbUrl').value=url;$('sbKey').value=key;await connect(url,key);}else show('setupScreen');
+}
+init();
+})();
+</script>
+</body></html>
