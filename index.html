@@ -61,6 +61,13 @@ textarea{resize:vertical;min-height:64px}
 .progress{height:6px;border-radius:8px;background:#e9f1f2;margin-top:12px;overflow:hidden}
 .progress span{display:block;height:100%;background:linear-gradient(90deg,#4cc3f0,#14b8a6);border-radius:8px}
 .progress-caption{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);margin-top:6px}
+.metrics.content{grid-template-columns:repeat(2,minmax(0,1fr));padding-bottom:0}
+.metric.wide{grid-column:1/-1}
+.metric-row.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.metric textarea{min-height:52px;font-weight:600}
+.weeks{display:grid;gap:8px}
+.week-row{display:grid;grid-template-columns:76px 1fr;gap:10px;align-items:start}
+.week-label{font-weight:800;font-size:13px;padding-top:10px;color:var(--accent)}
 .section{padding:0 22px 20px}
 .section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:5px 0 12px}
 .section-head h3{font-size:14px;margin:0}
@@ -100,7 +107,7 @@ textarea{resize:vertical;min-height:64px}
 .mountain-dot.peak text{fill:#fff}
 .mountain-legend{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:11px}
 .legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#14b8a6;margin-right:6px}
-@media(max-width:1000px){.metrics{grid-template-columns:1fr}}
+@media(max-width:1000px){.metrics,.metrics.content{grid-template-columns:1fr}.metric-row.four{grid-template-columns:1fr 1fr}}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.layout{grid-template-columns:1fr}.month-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.month-item{margin:0}}
 @media(max-width:600px){
  .app{padding:18px 12px 40px}.top{flex-direction:column;align-items:flex-start}.grid{gap:8px}.stat{padding:12px}.stat .value{font-size:20px}
@@ -206,7 +213,9 @@ async function load(){
   if(!months.some(m=>m.id===selected)) selected=sorted()[0]?.id||null;
 }
 function blankMonth(date,name){
-  return {id:uuid(),month_date:date,name:name||'',plan:'',target_clients:0,actual_clients:0,target_income:0,actual_income:0,target_spend:0,actual_spend:0,review:''};
+  return {id:uuid(),month_date:date,name:name||'',plan:'',target_clients:0,actual_clients:0,target_income:0,actual_income:0,target_spend:0,actual_spend:0,review:'',
+    yt_videos:0,yt_target:0,shorts_count:0,shorts_target:0,prodig_count:0,prodig_desc:'',prodig_sold:0,prodig_omzet:0,prodig_spend:0,
+    week1:'',week2:'',week3:'',week4:''};
 }
 async function seedIfEmpty(){
   if(months.length) return;
@@ -223,10 +232,24 @@ async function refresh(){
 
 /* ====== RENDER ====== */
 const METRICS=[
- {icon:'👥',title:'Klien',t:'target_clients',a:'actual_clients',lt:'Target klien',la:'Aktual klien',money:false},
- {icon:'💰',title:'Omzet',t:'target_income',a:'actual_income',lt:'Target omzet (Rp)',la:'Realisasi omzet (Rp)',money:true},
- {icon:'📣',title:'Spend iklan',t:'target_spend',a:'actual_spend',lt:'Budget iklan (Rp)',la:'Realisasi spend (Rp)',money:true}
+ {k:'yt',grp:'content',icon:'▶️',title:'YouTube',t:'yt_target',a:'yt_videos',lt:'Target konten YouTube',la:'Jumlah video YouTube',money:false,unit:'video'},
+ {k:'shorts',grp:'content',icon:'📱',title:'Shorts',t:'shorts_target',a:'shorts_count',lt:'Target shorts',la:'Jumlah shorts',money:false,unit:'shorts'},
+ {k:'clients',grp:'biz',icon:'👥',title:'Klien',t:'target_clients',a:'actual_clients',lt:'Target klien',la:'Aktual klien',money:false,unit:'klien'},
+ {k:'income',grp:'biz',icon:'💰',title:'Omzet',t:'target_income',a:'actual_income',lt:'Target omzet (Rp)',la:'Realisasi omzet (Rp)',money:true},
+ {k:'spend',grp:'biz',icon:'📣',title:'Spend iklan',t:'target_spend',a:'actual_spend',lt:'Budget iklan (Rp)',la:'Realisasi spend (Rp)',money:true}
 ];
+function metricCard(x,m){
+  return '<div class="metric" data-k="'+x.k+'"><div class="metric-top"><div class="metric-title">'+x.title+'</div><div class="metric-icon">'+x.icon+'</div></div>'+
+    '<div class="metric-row"><div><label>'+x.lt+'</label><input type="number" min="0" data-m="'+x.t+'" value="'+Number(m[x.t]||0)+'"></div>'+
+    '<div><label>'+x.la+'</label><input type="number" min="0" data-m="'+x.a+'" value="'+Number(m[x.a]||0)+'"></div></div>'+
+    '<div class="progress"><span style="width:0"></span></div><div class="progress-caption"><span class="cap"></span><b class="pct"></b></div></div>';
+}
+function prodigCard(m){
+  const n=(f,l,ph)=>'<div><label>'+l+'</label><input type="number" min="0" data-m="'+f+'" value="'+Number(m[f]||0)+'"'+(ph?' placeholder="'+ph+'"':'')+'></div>';
+  return '<div class="metric wide"><div class="metric-top"><div class="metric-title">Produk digital</div><div class="metric-icon">🛍️</div></div>'+
+    '<div class="metric-row four">'+n('prodig_count','Jumlah produk digital')+n('prodig_sold','Jumlah terjual')+n('prodig_omzet','Omzet prodig (Rp)')+n('prodig_spend','Spend iklan prodig (Rp)')+'</div>'+
+    '<div style="margin-top:10px"><label>Keterangan produk</label><textarea data-m="prodig_desc" placeholder="Nama produk, harga, catatan...">'+esc(m.prodig_desc)+'</textarea></div></div>';
+}
 const pct = (m,x) => Number(m[x.t]||0)>0 ? Math.min(100,Math.round(Number(m[x.a]||0)/Number(m[x.t])*100)) : 0;
 
 function renderStats(){
@@ -249,9 +272,9 @@ function renderList(){
 }
 function updateProgress(m){
   METRICS.forEach((x,i)=>{
-    const p=pct(m,x), card=document.querySelectorAll('.metric')[i]; if(!card) return;
+    const p=pct(m,x), card=document.querySelector('.metric[data-k="'+x.k+'"]'); if(!card) return;
     card.querySelector('.progress span').style.width=p+'%';
-    card.querySelector('.cap').textContent=x.money?fmtMoney(m[x.a])+' dari '+fmtMoney(m[x.t]):Number(m[x.a]||0)+' dari '+Number(m[x.t]||0)+' klien';
+    card.querySelector('.cap').textContent=x.money?fmtMoney(m[x.a])+' dari '+fmtMoney(m[x.t]):Number(m[x.a]||0)+' dari '+Number(m[x.t]||0)+' '+x.unit;
     card.querySelector('.pct').textContent=p+'%';
   });
 }
@@ -270,11 +293,10 @@ function renderDetail(){
     '<div class="field"><label>Bulan</label><input type="month" data-m="month_date" value="'+esc(m.month_date)+'"></div></div>'+
     '<div class="field" style="margin:0"><label>Catatan rencana</label><textarea data-m="plan" placeholder="Fokus utama bulan ini...">'+esc(m.plan)+'</textarea></div></div>'+
     '<div><button class="danger" id="delMonth">Hapus bulan</button></div></div>'+
-  '<div class="metrics">'+METRICS.map(x=>
-    '<div class="metric"><div class="metric-top"><div class="metric-title">'+x.title+'</div><div class="metric-icon">'+x.icon+'</div></div>'+
-    '<div class="metric-row"><div><label>'+x.lt+'</label><input type="number" min="0" data-m="'+x.t+'" value="'+Number(m[x.t]||0)+'"></div>'+
-    '<div><label>'+x.la+'</label><input type="number" min="0" data-m="'+x.a+'" value="'+Number(m[x.a]||0)+'"></div></div>'+
-    '<div class="progress"><span style="width:0"></span></div><div class="progress-caption"><span class="cap"></span><b class="pct"></b></div></div>').join('')+'</div>'+
+  '<div class="metrics content">'+METRICS.filter(x=>x.grp==='content').map(x=>metricCard(x,m)).join('')+prodigCard(m)+'</div>'+
+  '<div class="metrics">'+METRICS.filter(x=>x.grp==='biz').map(x=>metricCard(x,m)).join('')+'</div>'+
+  '<div class="section"><div class="section-head"><div><h3>Aktivitas mingguan</h3><p>Rencana atau catatan aktivitas untuk tiap minggu.</p></div></div><div class="weeks">'+
+    [1,2,3,4].map(n=>'<div class="week-row"><div class="week-label">Week '+n+'</div><textarea data-m="week'+n+'" placeholder="Aktivitas week '+n+'...">'+esc(m['week'+n])+'</textarea></div>').join('')+'</div></div>'+
   '<div class="section"><div class="section-head"><div><h3>Daftar klien</h3><p>Realisasi di atas terisi otomatis dari daftar ini, dan tetap bisa diedit manual.</p></div><button id="addClientBtn">+ Klien</button></div>'+
     '<div class="client-head"><span>Nama klien</span><span>Omzet (Rp)</span><span>Spend iklan (Rp)</span><span>Catatan</span><span></span></div><div class="clients" id="clientList"></div></div>'+
   '<div class="section"><div class="section-head"><div><h3>Milestone & tugas besar</h3><p>Semua kolom bisa diedit langsung, termasuk pindah ke bulan lain.</p></div><button id="addMileBtn">+ Milestone</button></div><div class="milestones" id="milestoneList"></div></div>'+
@@ -362,7 +384,9 @@ function addMonth(){
   const m=blankMonth(ym(d),'Bulan baru'); months.push(m); selected=m.id; queue(T.m,m); render(); toast('Bulan ditambahkan');
 }
 async function removeMonth(m){
-  if(!confirm('Hapus "'+(m.name||monthLabel(m.month_date,'bulan ini'))+'" beserta semua milestone dan klien di dalamnya?')) return;
+  const label=m.name||monthLabel(m.month_date,'bulan ini');
+  if(!confirm('Hapus "'+label+'" beserta semua milestone dan klien di dalamnya?')) return;
+  if(!confirm('Yakin? Bulan "'+label+'" akan dihapus permanen dan tidak bisa dikembalikan.')) return;
   try{
     await removeRow(T.m,m.id);
     months=months.filter(x=>x.id!==m.id); miles=miles.filter(x=>x.month_id!==m.id); clients=clients.filter(x=>x.month_id!==m.id);
