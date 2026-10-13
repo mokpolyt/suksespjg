@@ -25,6 +25,19 @@ textarea{resize:vertical;min-height:64px}
 .top h1{font-size:24px;line-height:1.2;margin:2px 0}
 .sub{color:var(--muted);font-size:13px}
 .save-status{font-size:12px;color:var(--muted)}
+.recap{margin-bottom:22px;padding:24px;border-radius:22px;color:#fff;background:linear-gradient(120deg,#e8343f 0%,#d62bb4 52%,#ff8a1f 100%);box-shadow:0 12px 34px #d62bb440}
+.recap-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.recap-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.13em;font-weight:800;opacity:.9}
+.recap h2{margin:3px 0 0;font-size:22px;letter-spacing:-.03em}
+.recap-pill{background:#ffffff2e;border:1px solid #ffffff55;border-radius:999px;padding:7px 12px;font-size:11px;font-weight:800;white-space:nowrap}
+.recap-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+.recap-box{background:#ffffff24;border:1px solid #ffffff40;border-radius:16px;padding:16px}
+.recap-label{font-size:12px;font-weight:700;opacity:.92}
+.recap-value{font-size:30px;font-weight:850;letter-spacing:-.04em;margin:4px 0 2px;overflow-wrap:anywhere}
+.recap-sub{font-size:12px;opacity:.92}
+.recap-bar{height:7px;border-radius:8px;background:#ffffff40;margin-top:12px;overflow:hidden}
+.recap-bar span{display:block;height:100%;width:0;background:#fff;border-radius:8px}
+@media(max-width:600px){.recap{padding:18px}.recap-grid{grid-template-columns:1fr}.recap-value{font-size:26px}.recap h2{font-size:20px}}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}
 .stat{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:var(--shadow)}
 .stat .label{font-size:12px;color:var(--muted);font-weight:650}
@@ -126,6 +139,13 @@ textarea{resize:vertical;min-height:64px}
   </header>
   <section id="errBox" class="errbox hidden"><h2>Gagal terhubung ke database</h2><p id="errMsg"></p><button id="retryBtn">Coba lagi</button></section>
   <main id="mainApp" class="hidden">
+    <section class="recap" aria-label="Rekap target 20 bulan">
+      <div class="recap-head"><div><div class="recap-eyebrow">REKAP TARGET · 20 BULAN</div><h2>Target video YouTube & omzet</h2></div><span class="recap-pill" id="recMonths">0 bulan terencana</span></div>
+      <div class="recap-grid">
+        <div class="recap-box"><div class="recap-label">Target video YouTube</div><div class="recap-value" id="recVideoTarget">0</div><div class="recap-sub" id="recVideoActual">Terealisasi 0 video · 0%</div><div class="recap-bar"><span id="recVideoBar"></span></div></div>
+        <div class="recap-box"><div class="recap-label">Target omzet</div><div class="recap-value" id="recIncomeTarget">Rp0</div><div class="recap-sub" id="recIncomeActual">Terealisasi Rp0 · 0%</div><div class="recap-bar"><span id="recIncomeBar"></span></div></div>
+      </div>
+    </section>
     <div class="grid">
       <div class="stat"><div class="label">Total bulan direncanakan</div><div id="statMonths" class="value">0</div><div class="foot">Roadmap jangka panjang</div></div>
       <div class="stat"><div class="label">Total klien</div><div id="statClients" class="value">0</div><div class="foot">Akumulasi semua bulan</div></div>
@@ -252,7 +272,20 @@ function prodigCard(m){
 }
 const pct = (m,x) => Number(m[x.t]||0)>0 ? Math.min(100,Math.round(Number(m[x.a]||0)/Number(m[x.t])*100)) : 0;
 
+function renderRecap(){
+  const first=sorted().slice(0,20);
+  const tv=sum(first,'yt_target'), av=sum(first,'yt_videos'), ti=sum(first,'target_income'), ai=sum(first,'actual_income');
+  const p=(a,t)=>t>0?Math.min(100,Math.round(a/t*100)):0;
+  $('recMonths').textContent=first.length+' dari 20 bulan terencana';
+  $('recVideoTarget').textContent=tv.toLocaleString('id-ID')+' video';
+  $('recVideoActual').textContent='Terealisasi '+av.toLocaleString('id-ID')+' video · '+p(av,tv)+'%';
+  $('recVideoBar').style.width=p(av,tv)+'%';
+  $('recIncomeTarget').textContent=fmtMoney(ti);
+  $('recIncomeActual').textContent='Terealisasi '+fmtMoney(ai)+' · '+p(ai,ti)+'%';
+  $('recIncomeBar').style.width=p(ai,ti)+'%';
+}
 function renderStats(){
+  renderRecap();
   $('statMonths').textContent=months.length;
   $('statClients').textContent=sum(months,'actual_clients').toLocaleString('id-ID');
   $('statOmzet').textContent=fmtMoney(sum(months,'actual_income'));
